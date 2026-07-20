@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { dummyDateTimeData, dummyShowsData } from '../assets/assets'
 import BlurCircle from '../components/BlurCircle'
-import { Heart, PlayCircleIcon, StarIcon } from 'lucide-react'
+import { Heart, PlayCircleIcon, StarIcon, Ticket } from 'lucide-react'
 import timeFormat from '../lib/timeFormat'
-import DateSelect from '../components/DateSelect'
+import DateTimeModal from '../components/DateTimeModal'
 import MovieCard from '../components/MovieCard'
 import Loading from '../components/Loading'
 import { useAppContext } from '../context/AppContext'
+import { fallbackShowById } from '../assets/events'
 import toast from 'react-hot-toast'
 
 const MovieDetails = () => {
   const { id } = useParams()
   const [show, setShow] = useState(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const navigate = useNavigate()
 
   const {shows, axios, getToken, user, favouriteMovies, fetchFavouriteMovies, image_base_url} = useAppContext()
@@ -22,10 +23,14 @@ const MovieDetails = () => {
       const {data} = await axios.get(`/api/show/${id}`)
       if(data.success){
         setShow(data)
+        return
       }
     } catch (error) {
       console.error(error)
     }
+    // Backend unavailable → use bundled fallback so the page still works.
+    const fb = fallbackShowById(id)
+    if (fb) setShow(fb)
   }
 
   const handleFavourite = async() => {
@@ -75,7 +80,9 @@ const MovieDetails = () => {
               <PlayCircleIcon className='w-5 h-5' />
               Watch Trailer
             </button>
-            <a href='#dateSelect' className='px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95'>Buy Tickets</a>
+            <button onClick={() => setPickerOpen(true)} className='flex items-center gap-2 px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95'>
+              <Ticket className='w-5 h-5' /> Buy Tickets
+            </button>
             <button onClick={handleFavourite} className='bg-gray-700 p-2.5 rounded-full transition cursor-pointer active:scale-95'>
               <Heart className={`w-5 h-5 ${favouriteMovies.find(movie => movie._id === id) ? 'fill-primary text-primary' : ''}`} />
             </button>
@@ -95,7 +102,18 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      <DateSelect dateTime={show.dateTime} id={id} />
+      <DateTimeModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        title={show.movie.title}
+        venue='QuickShow Cinemas'
+        schedule={show.dateTime}
+        onConfirm={({ date, slot }) => {
+          setPickerOpen(false)
+          navigate(`/movies/${id}/${date}`, { state: { showId: slot.showId } })
+          scrollTo(0, 0)
+        }}
+      />
 
       <p className='text-lg font-medium mt-20 mb-8'>You May Also Like</p>
       <div className='flex flex-wrap max-sm:justify-center gap-8'>

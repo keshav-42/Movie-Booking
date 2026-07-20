@@ -55,6 +55,10 @@ const router = createBrowserRouter([
         element: <SeatLayout />
       },
       {
+        path: '/event/:id/:date',
+        element: <SeatLayout />
+      },
+      {
         path: '/my-bookings',
         element: <MyBookings />
       },
