@@ -1,6 +1,6 @@
 <div align="center">
 
-# Epsilon
+# QuickShow
 
 ### A full-stack booking platform for movies, sports, concerts, and live events
 
@@ -23,7 +23,7 @@ Booking a ticket online is rarely one smooth experience. Discovery lives on one 
 
 ## The Solution
 
-**Epsilon** brings the entire journey into a single, coherent product. A user discovers an event, sees live per-section pricing and how many seats remain, drills into a real venue map to pick exact seats, and pays through a secure checkout — without ever leaving the app. Availability is kept honest by a background-jobs layer that releases seats when a payment is abandoned, and customers are kept informed with automated confirmations and reminders. Operators get an admin panel to publish shows and track revenue in one place.
+**QuickShow** brings the entire journey into a single, coherent product. A user discovers an event, sees live per-section pricing and how many seats remain, drills into a real venue map to pick exact seats, and pays through a secure checkout — without ever leaving the app. Availability is kept honest by a background-jobs layer that releases seats when a payment is abandoned, and customers are kept informed with automated confirmations and reminders. Operators get an admin panel to publish shows and track revenue in one place.
 
 ## Features
 

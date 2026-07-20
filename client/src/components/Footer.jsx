@@ -35,7 +35,7 @@ const Footer = () => {
         </div>
       </div>
       <p className="pt-4 text-center text-sm pb-5">
-        Copyright {new Date().getFullYear()} © Epsilon. All Rights Reserved.
+        Copyright {new Date().getFullYear()} © QuickShow. All Rights Reserved.
       </p>
     </footer>
   )

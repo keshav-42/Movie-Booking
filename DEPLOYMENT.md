@@ -1,12 +1,12 @@
-# Deploying Epsilon
+# Deploying QuickShow
 
-Epsilon is a two-part app, so it deploys as **two Vercel projects** from the same
+QuickShow is a two-part app, so it deploys as **two Vercel projects** from the same
 GitHub repository:
 
 | Project | Root directory | What it is |
 | --- | --- | --- |
-| `epsilon-client` | `client/` | The React + Vite frontend (static build) |
-| `epsilon-server` | `server/` | The Express API (Vercel serverless function) |
+| `quickshow-client` | `client/` | The React + Vite frontend (static build) |
+| `quickshow-server` | `server/` | The Express API (Vercel serverless function) |
 
 The database is **MongoDB Atlas** (already used in development). Both `client/` and
 `server/` already contain a `vercel.json`, so Vercel knows how to build each one.
@@ -29,7 +29,7 @@ The database is **MongoDB Atlas** (already used in development). Both `client/` 
 ## Step 1 — Deploy the backend (`server/`)
 
 1. Go to <https://vercel.com/new> and **Import** the `keshav-42/Movie-Booking` repo.
-2. **Project name:** `epsilon-server`
+2. **Project name:** `quickshow-server`
 3. **Root Directory:** click *Edit* and select **`server`**.
 4. **Framework Preset:** *Other* (the included `vercel.json` handles the build).
 5. Open **Environment Variables** and add every key from
@@ -45,14 +45,14 @@ The database is **MongoDB Atlas** (already used in development). Both `client/` 
    | `CLIENT_URL` | Your frontend URL (fill after Step 2) |
 
 6. Click **Deploy**. When it finishes, copy the URL, e.g.
-   `https://epsilon-server.vercel.app`. Visiting it should show **"Server is Live"**.
+   `https://quickshow-server.vercel.app`. Visiting it should show **"Server is Live"**.
 
 ---
 
 ## Step 2 — Deploy the frontend (`client/`)
 
 1. Again go to <https://vercel.com/new> and **Import** the same repo.
-2. **Project name:** `epsilon-client`
+2. **Project name:** `quickshow-client`
 3. **Root Directory:** select **`client`**.
 4. **Framework Preset:** **Vite** (auto-detected). Build command `npm run build`,
    output directory `dist`.
@@ -60,19 +60,19 @@ The database is **MongoDB Atlas** (already used in development). Both `client/` 
 
    | Key | Value |
    | --- | --- |
-   | `VITE_BASE_URL` | your backend URL from Step 1, e.g. `https://epsilon-server.vercel.app` |
+   | `VITE_BASE_URL` | your backend URL from Step 1, e.g. `https://quickshow-server.vercel.app` |
    | `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
    | `VITE_TMDB_IMAGE_BASE_URL` | `https://image.tmdb.org/t/p/original` |
    | `VITE_CURRENCY` | `$` (or your preference) |
 
 6. Click **Deploy**, then copy the frontend URL, e.g.
-   `https://epsilon-client.vercel.app`.
+   `https://quickshow-client.vercel.app`.
 
 ---
 
 ## Step 3 — Wire the two together
 
-1. In the **backend** project (`epsilon-server`) → **Settings → Environment
+1. In the **backend** project (`quickshow-server`) → **Settings → Environment
    Variables**, set `CLIENT_URL` to the frontend URL from Step 2, then
    **Redeploy** the backend so email links point at the live site.
 2. Confirm the **frontend's** `VITE_BASE_URL` points at the backend URL. If you
@@ -86,19 +86,19 @@ These make payments, auth sync, and emails work end to end.
 
 **Clerk** (user sync)
 - Clerk Dashboard → **Webhooks** → add endpoint:
-  `https://epsilon-server.vercel.app/api/inngest`
+  `https://quickshow-server.vercel.app/api/inngest`
 - Subscribe to `user.created`, `user.updated`, `user.deleted`.
 
 **Stripe** (payment confirmation)
 - Stripe Dashboard → **Developers → Webhooks** → add endpoint:
-  `https://epsilon-server.vercel.app/api/stripe`
+  `https://quickshow-server.vercel.app/api/stripe`
 - Subscribe to `checkout.session.completed`.
 - Copy the **Signing secret** (`whsec_...`) into the backend's
   `STRIPE_WEBHOOK_SECRET`, then redeploy the backend.
 
 **Inngest** (emails, reminders, seat release)
 - Create an [Inngest](https://www.inngest.com/) app and connect it to the serve
-  endpoint: `https://epsilon-server.vercel.app/api/inngest`.
+  endpoint: `https://quickshow-server.vercel.app/api/inngest`.
 
 ---
 
