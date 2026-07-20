@@ -17,7 +17,7 @@ export const getNowPlayingMovies = async (req, res) => {
     res.json({ success: true, movies: movies });
   } catch (error) {
     console.error(error);
-    res.json({ sucess: false, message: error.message });
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -92,7 +92,7 @@ export const addShow = async (req, res) => {
     res.json({ success: true, message: "Show Added successfully." });
   } catch (error) {
     console.error(error);
-    res.json({ sucess: false, message: error.message });
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -101,10 +101,15 @@ export const getShows = async (req, res) => {
     try {
         const shows = await Show.find({showDateTime: {$gte: new Date()}}).populate('movie').sort({showDateTime: 1})
 
-        //filter unique shows
-        const uniqueShows = new Set(shows.map(show => show.movie))
+        //filter unique shows by movie id
+        const uniqueShowsMap = new Map()
+        shows.forEach(show => {
+            if(show.movie && !uniqueShowsMap.has(show.movie._id.toString())){
+                uniqueShowsMap.set(show.movie._id.toString(), show.movie)
+            }
+        })
 
-        res.json({success: true, shows: Array.from(uniqueShows)})
+        res.json({success: true, shows: Array.from(uniqueShowsMap.values())})
     } catch (error) {
         res.json({ success: false, message: error.message });
         

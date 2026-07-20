@@ -190,14 +190,14 @@ const sendShowReminders = inngest.createFunction(
     //prepare reminder tasks
     const reminderTasks = await step.run("prepare-reminder-tasks", async () => {
       const shows = await Show.find({
-        showTime: { $gte: windowStart, $lte: in8Hours },
+        showDateTime: { $gte: windowStart, $lte: in8Hours },
       }).populate("movie");
 
       const tasks = [];
       for (const show of shows) {
         if (!show.movie || !show.occupiedSeats) continue;
 
-        const userIds = { ...new Set(Object.values(show.occupiedSeats)) };
+        const userIds = [...new Set(Object.values(show.occupiedSeats))];
         if (userIds.length === 0) continue;
 
         const users = await User.find({ _id: { $in: userIds } }).select(
@@ -209,7 +209,7 @@ const sendShowReminders = inngest.createFunction(
             userEmail: user.email,
             userName: user.name,
             movieTitle: show.movie.title,
-            showTime: show.showTime,
+            showTime: show.showDateTime,
           });
         }
       }
@@ -271,7 +271,7 @@ const sendShowReminders = inngest.createFunction(
       );
     });
 
-    const sent = results.filter((r) => r.status === "fullfilled").length;
+    const sent = results.filter((r) => r.status === "fulfilled").length;
     const failed = results.length - sent;
 
     return {
