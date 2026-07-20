@@ -176,6 +176,10 @@ Point the Stripe and Clerk webhooks at your server (or use the Stripe CLI to for
 
 Never commit real secrets. `.env` files are gitignored; only the `.env.example` templates, with placeholder values, belong in the repo.
 
+## Deployment
+
+The frontend and backend deploy as two Vercel projects from this repository, backed by MongoDB Atlas. See [DEPLOYMENT.md](DEPLOYMENT.md) for a full step-by-step guide covering both projects, environment variables, and webhooks.
+
 ## License
 
 Released under the ISC License. Feel free to fork, learn from, and build on it.

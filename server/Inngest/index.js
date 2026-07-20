@@ -292,7 +292,7 @@ const sendNewShowNotifications = inngest.createFunction(
     for (const user of users) {
       const userEmail = user.email;
       const userName = user.name;
-      const movieLink = `https://quickshow-red.vercel.app/movies/${movieId}`;
+      const movieLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/movies/${movieId}`;
 
       const subject = `New Show Added: ${movieTitle}`;
       const body = `
