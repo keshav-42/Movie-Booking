@@ -209,7 +209,7 @@ export const normalizeEvent = (item, image_base_url = '') => {
       category: 'movies',
       title: item.title,
       subtitle: item.genres?.map((g) => g.name).slice(0, 2).join(' · ') || 'Movie',
-      venue: 'QuickShow Cinemas',
+      venue: 'Epsilon Cinemas',
       city: null,
       backdrop_path: image_base_url + (item.backdrop_path || ''),
       poster_path: image_base_url + (item.poster_path || ''),

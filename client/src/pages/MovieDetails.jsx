@@ -106,7 +106,7 @@ const MovieDetails = () => {
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         title={show.movie.title}
-        venue='QuickShow Cinemas'
+        venue='Epsilon Cinemas'
         schedule={show.dateTime}
         onConfirm={({ date, slot }) => {
           setPickerOpen(false)
