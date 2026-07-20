@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { getVenue, generateSeats, sectionPrice, sectionViewBox, FULL_VIEWBOX } from '../lib/venueModel'
+import { getVenue, generateSeats, sectionPrice, sectionSeatsLeft, sectionViewBox, FULL_VIEWBOX } from '../lib/venueModel'
 import { ZoomOut } from 'lucide-react'
 
 // The whole venue drawn as ONE figure inside a single SVG:
@@ -81,13 +81,15 @@ const VenueSeatMap = ({
           const isDim = selectedSection && !isSel
           const isHover = s.id === hover
           const price = sectionPrice(s, basePrice)
+          const left = seatsLoaded ? sectionSeatsLeft(s, occupiedSeats) : null
+          const soldOut = left === 0
           const seats = isSel ? generateSeats(s) : null
 
           return (
             <g
               key={s.id}
               style={{
-                cursor: 'pointer',
+                cursor: soldOut ? 'not-allowed' : 'pointer',
                 opacity: isDim ? 0.28 : 1,
                 transition: 'opacity 0.45s ease',
               }}
@@ -99,25 +101,31 @@ const VenueSeatMap = ({
                 width={s.w}
                 height={s.h}
                 rx='8'
-                fill={s.color}
-                fillOpacity={isSel ? 0.14 : isHover ? 0.55 : 0.4}
-                stroke={isSel ? '#fff' : s.color}
+                fill={soldOut ? '#3f3f46' : s.color}
+                fillOpacity={isSel ? 0.14 : soldOut ? 0.35 : isHover ? 0.55 : 0.4}
+                stroke={isSel ? '#fff' : soldOut ? '#52525b' : s.color}
                 strokeWidth={isSel ? 2 : 1}
-                onClick={() => onSelectSection(isSel ? null : s.id)}
+                onClick={() => !soldOut && onSelectSection(isSel ? null : s.id)}
                 onMouseEnter={() => setHover(s.id)}
                 onMouseLeave={() => setHover(null)}
                 style={{ transition: 'fill-opacity 0.25s' }}
               />
 
-              {/* Label + price pill (hidden once zoomed into this section) */}
+              {/* Price + seats-left pill (hidden once zoomed into this section) */}
               {!isSel && (
                 <g transform={`translate(${s.cx}, ${s.cy})`} pointerEvents='none'>
-                  <rect x='-30' y='-16' width='60' height='32' rx='7' fill='#0b0b0e' fillOpacity='0.82' />
-                  <text textAnchor='middle' y='-2' fontSize='11' fill='#fff' fontWeight='700'>
+                  <rect x='-34' y='-17' width='68' height='34' rx='8' fill='#0b0b0e' fillOpacity='0.85' />
+                  <text textAnchor='middle' y='-3' fontSize='12' fill='#fff' fontWeight='700'>
                     ${price}
                   </text>
-                  <text textAnchor='middle' y='11' fontSize='8' fill='#cbd5e1'>
-                    {s.label}
+                  <text
+                    textAnchor='middle'
+                    y='11'
+                    fontSize='8'
+                    fontWeight='600'
+                    fill={soldOut ? '#f87171' : left != null && left <= 10 ? '#fbbf24' : '#86efac'}
+                  >
+                    {left == null ? s.label : soldOut ? 'Sold out' : `${left} left`}
                   </text>
                 </g>
               )}
@@ -200,6 +208,11 @@ const VenueSeatMap = ({
             {selected.label}
           </span>
           <span className='text-[11px] text-gray-400 ml-2'>${sectionPrice(selected, basePrice)}/seat</span>
+          {seatsLoaded && (
+            <span className='text-[11px] text-emerald-400 ml-2'>
+              {sectionSeatsLeft(selected, occupiedSeats)} left
+            </span>
+          )}
         </div>
       )}
     </div>

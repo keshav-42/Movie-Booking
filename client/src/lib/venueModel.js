@@ -143,6 +143,18 @@ export const generateSeats = (section) => {
   return seats
 }
 
+// Total seat capacity of a section (rows × cols).
+export const sectionCapacity = (section) => section.rows * section.cols
+
+// How many seats remain in a section given the occupied-seat ids. Occupied ids
+// are namespaced `${section.id}-<row><col>`, so we count the ones that belong to
+// this section and subtract from capacity.
+export const sectionSeatsLeft = (section, occupiedSeats = []) => {
+  const prefix = `${section.id}-`
+  const taken = occupiedSeats.reduce((n, id) => (id.startsWith(prefix) ? n + 1 : n), 0)
+  return Math.max(0, sectionCapacity(section) - taken)
+}
+
 // A viewBox string that frames a section with padding, for smooth zoom.
 export const sectionViewBox = (section, pad = 60) => {
   const x = section.x - pad

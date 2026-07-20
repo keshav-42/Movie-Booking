@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router'
 import Loading from '../components/Loading'
-import { ArrowRightIcon, ClockIcon, MapPinIcon, RadioIcon, Ticket } from 'lucide-react'
-import isoTimeFormat from '../lib/isoTimeFormat'
+import { ArrowRightIcon, MapPinIcon, RadioIcon, Ticket } from 'lucide-react'
 import BlurCircle from '../components/BlurCircle'
 import toast from 'react-hot-toast'
 import { useAppContext } from '../context/AppContext'
 import VenueSeatMap from '../components/VenueSeatMap'
 import SeatPreview from '../components/SeatPreview'
-import { getVenue, sectionPrice } from '../lib/venueModel'
+import { getVenue, sectionPrice, sectionSeatsLeft, sectionCapacity } from '../lib/venueModel'
 import { getEventById, normalizeEvent, fallbackShowById, CURRENCY } from '../assets/events'
 
 const SeatLayout = () => {
@@ -20,7 +19,6 @@ const SeatLayout = () => {
   const isEvent = location.pathname.startsWith('/event')
 
   const [subject, setSubject] = useState(null) // normalized movie or event
-  const [schedule, setSchedule] = useState({}) // { date: [{time, showId}] }
   const [selectedTime, setSelectedTime] = useState(null)
   const [selectedSection, setSelectedSection] = useState(null)
   const [selectedSeats, setSelectedSeats] = useState([])
@@ -39,7 +37,6 @@ const SeatLayout = () => {
         const ev = getEventById(id)
         if (ev) {
           setSubject(normalizeEvent(ev))
-          setSchedule(ev.schedule)
           // showId came via router state from the date/time modal
           const showId = location.state?.showId
           const slot = ev.schedule[date]?.find((t) => t.showId === showId) || ev.schedule[date]?.[0]
@@ -62,7 +59,12 @@ const SeatLayout = () => {
         if (data && !cancelled) {
           // Fallback movies already carry absolute TMDB image URLs.
           setSubject(normalizeEvent(data.movie, usedFallback ? '' : image_base_url))
-          setSchedule(data.dateTime || {})
+          const dateTime = data.dateTime || {}
+          // The showtime was already chosen on the movie details page; use the
+          // one passed via router state, else the first slot for this date.
+          const showId = location.state?.showId
+          const slot = dateTime[date]?.find((t) => t.showId === showId) || dateTime[date]?.[0]
+          setSelectedTime(slot || null)
         }
       }
     }
@@ -150,13 +152,18 @@ const SeatLayout = () => {
     }
   }
 
-  // Section list (for the left rail) with prices, sorted premium→value.
+  // Section list (for the left rail) with price + seats remaining, sorted
+  // premium→value. `left` recomputes as occupied seats change.
   const sectionList = useMemo(() => {
     if (!venue || !subject) return []
     return [...venue.sections]
-      .map((s) => ({ ...s, price: sectionPrice(s, subject.basePrice) }))
+      .map((s) => ({
+        ...s,
+        price: sectionPrice(s, subject.basePrice),
+        left: selectedTime ? sectionSeatsLeft(s, occupiedSeats) : sectionCapacity(s),
+      }))
       .sort((a, b) => b.price - a.price)
-  }, [venue, subject])
+  }, [venue, subject, occupiedSeats, selectedTime])
 
   if (!subject) return <Loading />
 
@@ -177,44 +184,39 @@ const SeatLayout = () => {
             <p className='text-xs text-gray-500 mt-1'>{new Date(date).toDateString()}</p>
           </div>
 
-          {/* showtimes */}
-          <div className='rounded-2xl bg-primary/10 border border-primary/20 p-4'>
-            <p className='text-sm font-semibold mb-3'>Showtimes</p>
-            <div className='flex flex-wrap gap-2'>
-              {(schedule[date] || []).map((item) => (
-                <button
-                  key={item.showId}
-                  onClick={() => setSelectedTime(item)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition ${
-                    selectedTime?.showId === item.showId ? 'bg-primary text-white' : 'bg-white/5 hover:bg-primary/20'
-                  }`}
-                >
-                  <ClockIcon className='w-4 h-4' />
-                  {isoTimeFormat(item.time)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* section price list */}
+          {/* combined section list: price + seats remaining */}
           <div className='rounded-2xl bg-white/5 border border-white/10 p-4'>
-            <p className='text-sm font-semibold mb-3'>Sections & prices</p>
-            <div className='space-y-1.5 max-h-56 overflow-y-auto no-scrollbar pr-1'>
+            <div className='flex items-center justify-between mb-3'>
+              <p className='text-sm font-semibold'>Sections</p>
+              <span className='text-[11px] text-gray-500'>price · seats left</span>
+            </div>
+            <div className='space-y-1.5 max-h-72 overflow-y-auto no-scrollbar pr-1'>
               {sectionList.map((s) => {
                 const active = s.id === selectedSection
+                const soldOut = s.left === 0
                 return (
                   <button
                     key={s.id}
+                    disabled={soldOut}
                     onClick={() => setSelectedSection(active ? null : s.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition border ${
+                    className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm transition border ${
                       active ? 'border-white/40 bg-white/10' : 'border-transparent hover:bg-white/5'
-                    }`}
+                    } ${soldOut ? 'opacity-45 cursor-not-allowed' : ''}`}
                   >
-                    <span className='flex items-center gap-2 truncate'>
+                    <span className='flex items-center gap-2 min-w-0'>
                       <span className='w-3 h-3 rounded-sm shrink-0' style={{ background: s.color }} />
                       <span className='truncate'>{s.label}</span>
                     </span>
-                    <span className='font-semibold shrink-0'>{CURRENCY}{s.price}</span>
+                    <span className='flex items-center gap-3 shrink-0'>
+                      <span className='font-semibold'>{CURRENCY}{s.price}</span>
+                      <span
+                        className={`text-[11px] tabular-nums ${
+                          soldOut ? 'text-red-400' : s.left <= 10 ? 'text-amber-400' : 'text-emerald-400'
+                        }`}
+                      >
+                        {soldOut ? 'Sold out' : `${s.left} left`}
+                      </span>
+                    </span>
                   </button>
                 )
               })}
@@ -287,7 +289,7 @@ const SeatLayout = () => {
 
           {!selectedTime && (
             <p className='text-center text-sm text-amber-400 mt-4'>
-              Select a showtime on the left to load live seat availability.
+              No showtime is available for this date. Please pick another date.
             </p>
           )}
         </main>
