@@ -72,7 +72,8 @@ const EventCard = ({ event, onBook }) => {
                 <MapPin className='w-2.5 h-2.5 shrink-0' /> {event.city || event.venue}
               </span>
             )}
-            <span className='text-[11px] font-semibold' style={{ color: t.accent }}>
+            <span className='text-[11px] font-semibold whitespace-nowrap' style={{ color: t.accent }}>
+              <span className='text-[9px] font-normal text-gray-400'>from </span>
               {CURRENCY}{event.basePrice}
             </span>
           </div>

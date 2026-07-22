@@ -20,7 +20,7 @@ const FILTERS = [
 
 const Home = () => {
   const navigate = useNavigate()
-  const { shows, image_base_url } = useAppContext()
+  const { shows, liveEvents, image_base_url } = useAppContext()
   const [filter, setFilter] = useState('all')
   const [modalEvent, setModalEvent] = useState(null)
 
@@ -32,7 +32,14 @@ const Home = () => {
     return source.map((s) => normalizeEvent(s, imgBase))
   }, [shows, image_base_url])
 
-  const events = useMemo(() => EVENTS.map((e) => normalizeEvent(e)), [])
+  // Real events published by the admin come first; bundled demo events fill
+  // the rails so discovery never looks empty. Demo ones are flagged so the
+  // booking flow can tell them apart.
+  const events = useMemo(() => {
+    const backend = liveEvents.map((e) => normalizeEvent(e))
+    const local = EVENTS.map((e) => normalizeEvent({ ...e, isLocal: true }))
+    return [...backend, ...local]
+  }, [liveEvents])
   const all = useMemo(() => [...movies, ...events], [movies, events])
 
   const byCategory = (cat) => all.filter((e) => e.category === cat)

@@ -45,13 +45,19 @@ const MyBookings = () => {
       <h1 className='text-lg font-semibold mb-4'>My Bookings</h1>
 
       {
-        bookings.map((item, index) => (
+        bookings.map((item, index) => {
+          const subject = item.show.movie || item.show.event
+          if (!subject) return null
+          // Event posters are absolute URLs; movie posters are TMDB paths
+          const poster = item.show.movie ? image_base_url + subject.poster_path : subject.poster_path
+          const duration = item.show.movie ? timeFormat(subject.runtime) : subject.runtimeLabel || subject.venue
+          return (
           <div key={index} className='flex flex-col md:flex-row justify-between bg-primary/8 border border-primary/20 rounded-lg mt-4 p-2 max-w-3xl'>
             <div className='flex flex-col md:flex-row'>
-              <img src={image_base_url + item.show.movie.poster_path} alt="movie poster" className='md:max-w-45 aspect-video h-auto object-cover object-bottom rounded' />
+              <img src={poster} alt="show poster" className='md:max-w-45 aspect-video h-auto object-cover object-bottom rounded' />
               <div className='flex flex-col p-4'>
-                <p className='text-lg font-semibold'>{item.show.movie.title}</p>
-                <p className='text-gray-400 text-sm'>{timeFormat(item.show.movie.runtime)}</p>
+                <p className='text-lg font-semibold'>{subject.title}</p>
+                <p className='text-gray-400 text-sm'>{duration}</p>
                 <p className='text-gray-400 text-sm mt-auto'>{dateFormat(item.show.showDateTime)}</p>
               </div>
             </div>
@@ -71,7 +77,7 @@ const MyBookings = () => {
             </div>
 
           </div>
-        ))
+        )})
       }
 
     </div>

@@ -92,10 +92,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
     const booking = await Booking.findById(bookingId)
       .populate({
         path: "show",
-        populate: {
-          path: "movie",
-          model: "Movie",
-        },
+        populate: [{ path: "movie" }, { path: "event" }],
       })
       .populate("user");
 
@@ -104,10 +101,13 @@ const sendBookingConfirmationEmail = inngest.createFunction(
       return;
     }
 
+    // A show hosts either a movie or a live event
+    const subjectTitle = booking.show.movie?.title || booking.show.event?.title || "your show";
+
     try {
       await sendEmail({
         to: booking.user.email,
-        subject: `Payment Confirmation "${booking.show.movie.title}" booked!`,
+        subject: `Payment Confirmation "${subjectTitle}" booked!`,
         body: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
           <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
@@ -119,10 +119,8 @@ const sendBookingConfirmationEmail = inngest.createFunction(
               
               <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 15px;">
                   <tr style="border-bottom: 1px solid #eee;">
-                      <td style="padding: 12px 0; font-weight: bold;">Movie:</td>
-                      <td style="padding: 12px 0; text-align: right;">${
-                        booking.show.movie.title
-                      }</td>
+                      <td style="padding: 12px 0; font-weight: bold;">Show:</td>
+                      <td style="padding: 12px 0; text-align: right;">${subjectTitle}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #eee;">
                       <td style="padding: 12px 0; font-weight: bold;">Date:</td>
@@ -191,11 +189,12 @@ const sendShowReminders = inngest.createFunction(
     const reminderTasks = await step.run("prepare-reminder-tasks", async () => {
       const shows = await Show.find({
         showDateTime: { $gte: windowStart, $lte: in8Hours },
-      }).populate("movie");
+      }).populate("movie").populate("event");
 
       const tasks = [];
       for (const show of shows) {
-        if (!show.movie || !show.occupiedSeats) continue;
+        const subject = show.movie || show.event;
+        if (!subject || !show.occupiedSeats) continue;
 
         const userIds = [...new Set(Object.values(show.occupiedSeats))];
         if (userIds.length === 0) continue;
@@ -208,7 +207,7 @@ const sendShowReminders = inngest.createFunction(
           tasks.push({
             userEmail: user.email,
             userName: user.name,
-            movieTitle: show.movie.title,
+            movieTitle: subject.title,
             showTime: show.showDateTime,
           });
         }
@@ -286,13 +285,14 @@ const sendNewShowNotifications = inngest.createFunction(
   { id: "send-new-show-notificaton" },
   { event: "app/show.added" },
   async ({ event }) => {
-    const { movieTitle, movieId } = event.data;
+    const { movieTitle, movieId, link } = event.data;
     const users = await User.find({});
 
     for (const user of users) {
       const userEmail = user.email;
       const userName = user.name;
-      const movieLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/movies/${movieId}`;
+      // `link` is set for event shows (/event/:id); movies keep the old path
+      const movieLink = `${process.env.CLIENT_URL || "http://localhost:5173"}${link || `/movies/${movieId}`}`;
 
       const subject = `New Show Added: ${movieTitle}`;
       const body = `

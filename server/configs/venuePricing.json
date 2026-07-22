@@ -1,0 +1,266 @@
+{
+  "cinema": {
+    "PRIME": {
+      "mult": 1.568,
+      "capacity": 56
+    },
+    "REC-L": {
+      "mult": 0.784,
+      "capacity": 17
+    },
+    "REC-R": {
+      "mult": 0.848,
+      "capacity": 17
+    },
+    "MID-C": {
+      "mult": 1.3,
+      "capacity": 98
+    },
+    "MID-L": {
+      "mult": 1.078,
+      "capacity": 33
+    },
+    "MID-R": {
+      "mult": 1.166,
+      "capacity": 33
+    },
+    "BAL-C": {
+      "mult": 0.988,
+      "capacity": 95
+    },
+    "BAL-L": {
+      "mult": 0.918,
+      "capacity": 34
+    },
+    "BAL-R": {
+      "mult": 0.864,
+      "capacity": 34
+    }
+  },
+  "theater": {
+    "ORCH-C": {
+      "mult": 1.734,
+      "capacity": 97
+    },
+    "ORCH-L": {
+      "mult": 1.3,
+      "capacity": 41
+    },
+    "ORCH-R": {
+      "mult": 1.222,
+      "capacity": 41
+    },
+    "MEZ-C": {
+      "mult": 1.056,
+      "capacity": 106
+    },
+    "MEZ-L": {
+      "mult": 0.893,
+      "capacity": 30
+    },
+    "MEZ-R": {
+      "mult": 0.969,
+      "capacity": 30
+    },
+    "BAL": {
+      "mult": 0.832,
+      "capacity": 150
+    }
+  },
+  "arena": {
+    "CS1": {
+      "mult": 1.862,
+      "capacity": 33
+    },
+    "CS2": {
+      "mult": 1.976,
+      "capacity": 33
+    },
+    "CS3": {
+      "mult": 1.824,
+      "capacity": 33
+    },
+    "CS4": {
+      "mult": 1.938,
+      "capacity": 33
+    },
+    "L101": {
+      "mult": 1.248,
+      "capacity": 64
+    },
+    "L102": {
+      "mult": 1.479,
+      "capacity": 64
+    },
+    "L103": {
+      "mult": 1.363,
+      "capacity": 64
+    },
+    "L104": {
+      "mult": 1.3,
+      "capacity": 64
+    },
+    "L105": {
+      "mult": 1.378,
+      "capacity": 64
+    },
+    "L106": {
+      "mult": 1.127,
+      "capacity": 64
+    },
+    "L107": {
+      "mult": 1.196,
+      "capacity": 64
+    },
+    "L108": {
+      "mult": 1.248,
+      "capacity": 64
+    },
+    "U201": {
+      "mult": 0.85,
+      "capacity": 57
+    },
+    "U202": {
+      "mult": 1.06,
+      "capacity": 57
+    },
+    "U203": {
+      "mult": 0.98,
+      "capacity": 57
+    },
+    "U204": {
+      "mult": 1.04,
+      "capacity": 57
+    },
+    "U205": {
+      "mult": 0.816,
+      "capacity": 57
+    },
+    "U206": {
+      "mult": 0.867,
+      "capacity": 57
+    },
+    "U207": {
+      "mult": 0.658,
+      "capacity": 57
+    },
+    "U208": {
+      "mult": 0.7,
+      "capacity": 57
+    },
+    "U209": {
+      "mult": 0.742,
+      "capacity": 57
+    },
+    "U210": {
+      "mult": 0.85,
+      "capacity": 57
+    }
+  },
+  "stadium": {
+    "L101": {
+      "mult": 1.056,
+      "capacity": 46
+    },
+    "L102": {
+      "mult": 1.428,
+      "capacity": 46
+    },
+    "L103": {
+      "mult": 1.786,
+      "capacity": 46
+    },
+    "L104": {
+      "mult": 1.9,
+      "capacity": 46
+    },
+    "L105": {
+      "mult": 1.484,
+      "capacity": 46
+    },
+    "L106": {
+      "mult": 1.372,
+      "capacity": 46
+    },
+    "L107": {
+      "mult": 1.144,
+      "capacity": 46
+    },
+    "L108": {
+      "mult": 0.912,
+      "capacity": 46
+    },
+    "L109": {
+      "mult": 0.969,
+      "capacity": 46
+    },
+    "L110": {
+      "mult": 0.912,
+      "capacity": 46
+    },
+    "L111": {
+      "mult": 0.969,
+      "capacity": 46
+    },
+    "L112": {
+      "mult": 1.034,
+      "capacity": 46
+    },
+    "U201": {
+      "mult": 0.65,
+      "capacity": 44
+    },
+    "U202": {
+      "mult": 0.901,
+      "capacity": 44
+    },
+    "U203": {
+      "mult": 0.833,
+      "capacity": 44
+    },
+    "U204": {
+      "mult": 0.884,
+      "capacity": 44
+    },
+    "U205": {
+      "mult": 0.816,
+      "capacity": 44
+    },
+    "U206": {
+      "mult": 0.867,
+      "capacity": 44
+    },
+    "U207": {
+      "mult": 0.611,
+      "capacity": 44
+    },
+    "U208": {
+      "mult": 0.65,
+      "capacity": 44
+    },
+    "U209": {
+      "mult": 0.689,
+      "capacity": 44
+    },
+    "U210": {
+      "mult": 0.65,
+      "capacity": 44
+    },
+    "U211": {
+      "mult": 0.689,
+      "capacity": 44
+    },
+    "U212": {
+      "mult": 0.637,
+      "capacity": 44
+    },
+    "U213": {
+      "mult": 0.676,
+      "capacity": 44
+    },
+    "U214": {
+      "mult": 0.624,
+      "capacity": 44
+    }
+  }
+}

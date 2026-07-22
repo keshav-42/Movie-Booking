@@ -13,6 +13,7 @@ export const AppProvider = ({ children }) => {
     const [checked, setChecked] = useState(false)
     const [isAdmin, setIsAdmin] = useState(false)
     const [shows, setShows] = useState([])
+    const [liveEvents, setLiveEvents] = useState([])
     const [favouriteMovies, setFavouriteMovies] = useState([])
 
     const image_base_url = import.meta.env.VITE_TMDB_IMAGE_BASE_URL
@@ -52,6 +53,17 @@ export const AppProvider = ({ children }) => {
         }
     }
 
+    // Live events (concerts / sports / theater) published by the admin. Each
+    // comes with a schedule map, same shape as the bundled demo events.
+    const fetchLiveEvents = async () => {
+        try {
+            const { data } = await axios.get('/api/event/all')
+            if (data.success) setLiveEvents(data.events)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     const fetchFavouriteMovies = async () => {
         try {
             const { data } = await axios.get('/api/user/favourites', {
@@ -70,6 +82,7 @@ export const AppProvider = ({ children }) => {
 
     useEffect(() => {
         fetchShows()
+        fetchLiveEvents()
     }, [])
 
     useEffect(() => {
@@ -87,7 +100,7 @@ export const AppProvider = ({ children }) => {
     const value = {
         axios,
         fetchIsAdmin,
-        user, getToken, navigate, isAdmin, shows, checked, image_base_url,
+        user, getToken, navigate, isAdmin, shows, liveEvents, checked, image_base_url,
         favouriteMovies, fetchFavouriteMovies
     }
     return (

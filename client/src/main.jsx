@@ -13,6 +13,7 @@ import { ClerkProvider, SignIn } from '@clerk/clerk-react'
 import Layout from './pages/admin/Layout.jsx'
 import Dashboard from './pages/admin/Dashboard.jsx'
 import AddShows from './pages/admin/AddShows.jsx'
+import AddEvents from './pages/admin/AddEvents.jsx'
 import ListShows from './pages/admin/ListShows.jsx'
 import ListBookings from './pages/admin/ListBookings.jsx'
 import { AppProvider, useAppContext } from './context/AppContext.jsx'
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
           {
             path: 'add-shows',
             element: <AddShows />
+          },
+          {
+            path: 'add-events',
+            element: <AddEvents />
           },
           {
             path: 'list-shows',

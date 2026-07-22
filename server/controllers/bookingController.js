@@ -2,9 +2,9 @@ import { inngest } from "../Inngest/index.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js"
 import stripe from 'stripe'
+import { validateSeats, computeAmount } from "../utils/venuePricing.js";
 
-
-//Functoin to check availability of selected seats for a movie
+//Function to check availability of selected seats for a show
 const checkSeatAvailability = async(showId, selectedSeats) => {
     try {
         const showData = await Show.findById(showId)
@@ -27,21 +27,37 @@ export const createBooking = async(req, res) => {
         const {showId, selectedSeats} = req.body
         const {origin} = req.headers    //front end url
 
-        //check if the seat is available for the selected show
-        const isAvailable = await checkSeatAvailability(showId, selectedSeats)
+        //Get the show details — a show hosts either a movie or a live event
+        const showData = await Show.findById(showId).populate('movie').populate('event')
+        if(!showData){
+            return res.json({success: false, message: "Show not found"})
+        }
 
+        const subject = showData.movie || showData.event
+        const venueType = showData.event?.venueType || 'cinema'
+
+        //Validate the seat ids against the venue's real sections (no trusting
+        //the client for what exists) …
+        const valid = validateSeats(venueType, selectedSeats)
+        if(!valid.ok){
+            return res.json({success: false, message: valid.message})
+        }
+
+        //… and that none of them are already reserved
+        const isAvailable = await checkSeatAvailability(showId, selectedSeats)
         if(!isAvailable){
             return res.json({success: false, message: "Selected seats are not available"})
         }
 
-        //Get the show details
-        const showData = await Show.findById(showId).populate('movie')
+        //Amount is computed server-side per seat from the section's price tier,
+        //matching exactly what the seat map displays.
+        const amount = computeAmount(venueType, showData.showPrice, selectedSeats)
 
         //create a new booking
         const booking = await Booking.create({
             user: userId,
             show: showId,
-            amount: showData.showPrice * selectedSeats.length,
+            amount,
             bookedSeats: selectedSeats
         })
 
@@ -53,18 +69,18 @@ export const createBooking = async(req, res) => {
 
         await showData.save()
 
-        //Strings Gateway Initialize
+        //Stripe Gateway Initialize
         const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
 
-        //creating line items to for stripe
+        //creating line items for stripe
         const line_items = [{
             price_data: {
                 currency: 'usd',
                 product_data: {
-                    name: showData.movie.title
+                    name: subject?.title || 'Ticket booking'
                 },
                 unit_amount: Math.floor(booking.amount) * 100
-            }, 
+            },
             quantity: 1
         }]
 
@@ -84,7 +100,7 @@ export const createBooking = async(req, res) => {
 
         await booking.save()
 
-        //Run Inngest schedular function to check payment status after 10 minutes
+        //Run Inngest scheduler function to check payment status after 10 minutes
         await inngest.send({
             name: 'app/checkpayment',
             data:{
@@ -103,6 +119,9 @@ export const getOccupiedSeats = async(req, res) => {
     try {
         const {showId} = req.params;
         const showData = await Show.findById(showId)
+        if(!showData){
+            return res.json({success: false, message: "Show not found"})
+        }
 
         const occupiedSeats = Object.keys(showData.occupiedSeats)
 
