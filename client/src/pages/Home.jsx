@@ -103,12 +103,18 @@ const Home = () => {
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition border ${
-                  active ? 'text-white border-transparent' : 'text-gray-300 border-white/15 hover:border-white/40 hover:text-white'
+                aria-pressed={active}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition border active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B] ${
+                  active
+                    ? 'text-white border-transparent'
+                    : 'text-gray-300 bg-white/5 border-white/15 hover:border-white/40 hover:text-white hover:bg-white/10'
                 }`}
                 style={
                   active
-                    ? { background: t ? `linear-gradient(135deg, ${t.from}, ${t.to})` : '#F84565' }
+                    ? {
+                        background: t ? `linear-gradient(135deg, ${t.from}, ${t.to})` : '#F84565',
+                        boxShadow: t ? `0 8px 22px -10px ${t.glow}` : '0 8px 22px -10px rgba(248,69,101,0.5)',
+                      }
                     : undefined
                 }
               >
@@ -121,7 +127,7 @@ const Home = () => {
       </div>
 
       {/* ───────── Rails ───────── */}
-      <div className='relative px-6 md:px-16 lg:px-28 py-10 space-y-12'>
+      <div className='relative px-6 md:px-16 lg:px-28 py-8 space-y-9'>
         <BlurCircle top='100px' right='-60px' />
 
         {filter === 'all' && (
