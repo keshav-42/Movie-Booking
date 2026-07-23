@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router'
 import { assets } from '../assets/assets.js'
 import { MenuIcon, SearchIcon, TicketPlus, XIcon } from 'lucide-react'
-import { useClerk, UserButton, useUser } from '@clerk/clerk-react'
+import { useClerk, UserButton, useUser, useSignIn } from '@clerk/clerk-react'
+import toast from 'react-hot-toast'
 import { useAppContext } from '../context/AppContext.jsx'
 
 const NAV_LINKS = [
@@ -18,11 +19,32 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [scrolled, setScrolled] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
   const { user } = useUser()
   const { openSignIn } = useClerk()
+  const { signIn, setActive, isLoaded } = useSignIn()
   const navigate = useNavigate()
   const location = useLocation()
-  const { favouriteMovies } = useAppContext()
+  const { axios, favouriteMovies } = useAppContext()
+
+  // One-click sign-in to the shared demo account. The backend mints a Clerk
+  // sign-in token (ticket) which we redeem here — no signup, no password prompt.
+  const handleDemo = async () => {
+    if (!isLoaded || demoLoading) return
+    try {
+      setDemoLoading(true)
+      const { data } = await axios.post('/api/user/demo-login')
+      if (!data.success) return toast.error(data.message || 'Demo is unavailable right now')
+      const res = await signIn.create({ strategy: 'ticket', ticket: data.token })
+      await setActive({ session: res.createdSessionId })
+      toast.success('Signed in as Demo — enjoy exploring!')
+      setIsOpen(false)
+    } catch (err) {
+      toast.error(err?.errors?.[0]?.message || 'Could not start the demo session')
+    } finally {
+      setDemoLoading(false)
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -87,12 +109,21 @@ const Navbar = () => {
       {/* Auth */}
       <div className='flex items-center gap-3 shrink-0'>
         {!user ? (
-          <button
-            onClick={openSignIn}
-            className='px-4 py-1.5 sm:px-6 sm:py-2 bg-primary hover:bg-primary-dull transition rounded-full text-sm font-medium'
-          >
-            Login
-          </button>
+          <>
+            <button
+              onClick={handleDemo}
+              disabled={demoLoading}
+              className='hidden sm:inline-flex px-4 py-1.5 sm:px-5 sm:py-2 border border-white/25 hover:border-white/50 hover:bg-white/5 transition rounded-full text-sm font-medium disabled:opacity-60'
+            >
+              {demoLoading ? 'Starting…' : 'Try Demo'}
+            </button>
+            <button
+              onClick={openSignIn}
+              className='px-4 py-1.5 sm:px-6 sm:py-2 bg-primary hover:bg-primary-dull transition rounded-full text-sm font-medium'
+            >
+              Login
+            </button>
+          </>
         ) : (
           <UserButton>
             <UserButton.MenuItems>
@@ -126,6 +157,15 @@ const Navbar = () => {
         ))}
         {favouriteMovies.length > 0 && (
           <Link to='/favourite' onClick={() => { scrollTo(0, 0); close() }}>Favourites</Link>
+        )}
+        {!user && (
+          <button
+            onClick={handleDemo}
+            disabled={demoLoading}
+            className='mt-2 px-6 py-2 border border-white/25 hover:border-white/50 transition rounded-full text-base font-medium disabled:opacity-60'
+          >
+            {demoLoading ? 'Starting…' : 'Try Demo'}
+          </button>
         )}
       </div>
     </div>
