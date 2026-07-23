@@ -1,16 +1,43 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { StarIcon, MapPin } from 'lucide-react'
+import { StarIcon } from 'lucide-react'
 import { CURRENCY, themeFor } from '../assets/events'
 
-// A minimalist, poster-forward card. Category identity comes through a soft
-// gradient wash + accent (see CATEGORY_THEME) rather than heavy chrome, so a
-// shelf of them reads as one cohesive system.
+// Poster image that survives a dead URL: tries the backdrop next, then paints a
+// category-tinted placeholder with the title so a rail never shows a broken img.
+const Poster = ({ event, t }) => {
+  const sources = [event.poster_path, event.backdrop_path].filter(Boolean)
+  const [i, setI] = useState(0)
+  if (i >= sources.length) {
+    return (
+      <div
+        className='w-full h-full flex items-end p-3'
+        style={{ background: `linear-gradient(150deg, ${t.from}, ${t.to})` }}
+      >
+        <span className='text-sm font-semibold leading-tight line-clamp-3 text-white/95'>{event.title}</span>
+      </div>
+    )
+  }
+  return (
+    <img
+      src={sources[i]}
+      alt={event.title}
+      loading='lazy'
+      onError={() => setI((n) => n + 1)}
+      className='w-full h-full object-cover transition duration-500 group-hover:scale-[1.05]'
+    />
+  )
+}
+
+// Poster-forward card. The artwork carries the card — no chrome painted over it.
+// Identity is a single category-colored dot in the meta line; the rest of the
+// information (title, rating, price) lives in a tight text block below the
+// poster, the way a film shelf reads, so a rail scans clean instead of busy.
 const EventCard = ({ event, onBook }) => {
   const navigate = useNavigate()
   const isMovie = event.category === 'movies'
   const t = themeFor(event.category)
-  const img = event.poster_path || event.backdrop_path
+  const year = event.release_date ? new Date(event.release_date).getFullYear() : null
 
   const go = () => {
     if (isMovie) {
@@ -24,59 +51,37 @@ const EventCard = ({ event, onBook }) => {
   return (
     <button
       onClick={go}
-      className='group relative w-44 sm:w-48 shrink-0 text-left rounded-2xl transition-transform duration-300 hover:-translate-y-1.5 focus:outline-none'
+      aria-label={`${event.title} — view details`}
+      className='group w-40 sm:w-[11.5rem] shrink-0 text-left focus:outline-none'
     >
-      {/* gradient glow that only appears on hover */}
-      <div
-        className='absolute -inset-1 rounded-[20px] opacity-0 group-hover:opacity-100 blur-lg transition duration-300 -z-10'
-        style={{ background: `linear-gradient(135deg, ${t.from}, ${t.to})` }}
-      />
+      {/* poster — clean, sharp, depth from a real drop shadow */}
+      <div className='relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 transition duration-300 group-hover:-translate-y-1 group-hover:ring-white/25 group-focus-visible:ring-2 group-focus-visible:ring-white/80'>
+        <Poster event={event} t={t} />
+        {/* faint bottom fade only on hover, so the title area lifts without chrome at rest */}
+        <div className='absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition duration-300' />
+      </div>
 
-      {/* poster */}
-      <div className='relative aspect-[2/3] rounded-2xl overflow-hidden ring-1 ring-white/10'>
-        <img
-          src={img}
-          alt={event.title}
-          loading='lazy'
-          className='w-full h-full object-cover transition duration-500 group-hover:scale-105'
-        />
-        {/* bottom scrim + gradient tint keyed to category */}
-        <div className='absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent' />
-        <div
-          className='absolute inset-0 opacity-30 mix-blend-soft-light'
-          style={{ background: `linear-gradient(160deg, ${t.from}22, ${t.to}55)` }}
-        />
-
-        {/* category chip */}
-        <span
-          className='absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full text-[10px] font-semibold text-white/95 backdrop-blur-sm'
-          style={{ background: `linear-gradient(135deg, ${t.from}cc, ${t.to}cc)` }}
-        >
-          {t.label}
-        </span>
-
-        {/* rating */}
-        {event.vote_average != null && (
-          <span className='absolute top-2.5 right-2.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-black/55 backdrop-blur-sm'>
-            <StarIcon className='w-2.5 h-2.5 text-starColor fill-starColor' />
-            {Number(event.vote_average).toFixed(1)}
-          </span>
-        )}
-
-        {/* title + meta over the scrim */}
-        <div className='absolute bottom-0 left-0 right-0 p-3'>
-          <p className='font-semibold text-sm leading-tight line-clamp-2'>{event.title}</p>
-          <div className='flex items-center justify-between mt-1.5'>
-            {(event.city || event.venue) && (
-              <span className='flex items-center gap-1 text-[10px] text-gray-300 truncate max-w-[60%]'>
-                <MapPin className='w-2.5 h-2.5 shrink-0' /> {event.city || event.venue}
+      {/* meta below the poster — two tight lines, no overlay tags */}
+      <div className='mt-2.5'>
+        <p className='text-sm font-medium leading-snug truncate text-gray-100 group-hover:text-white transition'>
+          {event.title}
+        </p>
+        <div className='flex items-center justify-between mt-1 text-xs text-gray-400'>
+          <span className='inline-flex items-center gap-1.5 truncate'>
+            <span className='w-1.5 h-1.5 rounded-full shrink-0' style={{ background: t.accent }} />
+            {event.vote_average != null ? (
+              <span className='inline-flex items-center gap-0.5'>
+                <StarIcon className='w-3 h-3 text-starColor fill-starColor' />
+                {Number(event.vote_average).toFixed(1)}
               </span>
+            ) : (
+              <span className='truncate'>{event.city || event.venue || t.label}</span>
             )}
-            <span className='text-[11px] font-semibold whitespace-nowrap' style={{ color: t.accent }}>
-              <span className='text-[9px] font-normal text-gray-400'>from </span>
-              {CURRENCY}{event.basePrice}
-            </span>
-          </div>
+            {year && <span className='text-gray-600'>· {year}</span>}
+          </span>
+          <span className='whitespace-nowrap font-medium text-gray-300'>
+            {CURRENCY}{event.basePrice}
+          </span>
         </div>
       </div>
     </button>

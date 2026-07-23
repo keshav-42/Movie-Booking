@@ -40,7 +40,7 @@ const Rail = ({ title, subtitle, onViewAll, children }) => {
           </button>
         </div>
       </div>
-      <div ref={ref} className='flex gap-4 overflow-x-auto no-scrollbar pb-2 scroll-smooth'>
+      <div ref={ref} className='flex gap-3 overflow-x-auto no-scrollbar pb-2 scroll-smooth'>
         {children}
       </div>
     </section>
