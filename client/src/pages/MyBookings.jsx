@@ -52,27 +52,26 @@ const MyBookings = () => {
           const poster = item.show.movie ? image_base_url + subject.poster_path : subject.poster_path
           const duration = item.show.movie ? timeFormat(subject.runtime) : subject.runtimeLabel || subject.venue
           return (
-          <div key={index} className='flex flex-col md:flex-row justify-between bg-primary/8 border border-primary/20 rounded-lg mt-4 p-2 max-w-3xl'>
-            <div className='flex flex-col md:flex-row'>
-              <img src={poster} alt="show poster" className='md:max-w-45 aspect-video h-auto object-cover object-bottom rounded' />
-              <div className='flex flex-col p-4'>
-                <p className='text-lg font-semibold'>{subject.title}</p>
+          <div key={index} className='flex flex-col md:flex-row md:items-stretch gap-4 justify-between bg-primary/8 border border-primary/20 rounded-lg mt-4 p-4 max-w-3xl'>
+            <div className='flex flex-col sm:flex-row gap-4 min-w-0'>
+              <img src={poster} alt="show poster" className='w-full sm:w-45 sm:max-w-45 aspect-video object-cover object-bottom rounded shrink-0' />
+              <div className='flex flex-col min-w-0'>
+                <p className='text-lg font-semibold break-words'>{subject.title}</p>
                 <p className='text-gray-400 text-sm'>{duration}</p>
                 <p className='text-gray-400 text-sm mt-auto'>{dateFormat(item.show.showDateTime)}</p>
               </div>
             </div>
 
-
-            <div className='flex flex-col md:items-end md:text-right justify-between p-4'>
+            <div className='flex flex-col md:items-end md:text-right justify-between shrink-0 md:w-52'>
               <div className='flex items-center gap-4'>
                 <p className='text-2xl font-semibold mb-3'>{currency}{item.amount}</p>
                 {!item.isPaid &&
-                  <Link to={item.paymentLink} className='bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer'>Pay Now</Link>
+                  <Link to={item.paymentLink} className='bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer shrink-0'>Pay Now</Link>
                 }
               </div>
               <div className='text-sm'>
                 <p><span className='text-gray-400'>Total Tickets:</span> {item.bookedSeats.length}</p>
-                <p><span className='text-gray-400'>Seat Number:</span> {item.bookedSeats.join(', ')}</p>
+                <p className='break-words'><span className='text-gray-400'>Seat Number:</span> {item.bookedSeats.join(', ')}</p>
               </div>
             </div>
 
