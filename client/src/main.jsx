@@ -7,6 +7,7 @@ import Movies from './pages/Movies.jsx'
 import MovieDetails from './pages/MovieDetails.jsx'
 import SeatLayout from './pages/SeatLayout.jsx'
 import MyBookings from './pages/MyBookings.jsx'
+import BookingSuccess from './pages/BookingSuccess.jsx'
 import Favourite from './pages/Favourite.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { ClerkProvider, SignIn } from '@clerk/clerk-react'
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
       {
         path: '/my-bookings',
         element: <MyBookings />
+      },
+      {
+        path: '/booking-success',
+        element: <BookingSuccess />
       },
       {
         path: '/loading/:nextUrl',

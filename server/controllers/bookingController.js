@@ -86,7 +86,7 @@ export const createBooking = async(req, res) => {
 
         //creating payment session
         const session = await stripeInstance.checkout.sessions.create({
-            success_url: `${origin}/loading/my-bookings`,
+            success_url: `${origin}/booking-success?bookingId=${booking._id.toString()}`,
             cancel_url: `${origin}/my-bookings`,
             line_items: line_items,
             mode: 'payment',
@@ -116,6 +116,28 @@ export const createBooking = async(req, res) => {
         }
 
         res.json({success: true, url: session.url})
+    } catch (error) {
+        console.error(error.message)
+        res.json({success: false, message: error.message})
+    }
+}
+
+// Single booking, scoped to the requesting user — powers the post-checkout
+// success screen (fetched by the bookingId in the Stripe success_url).
+export const getBookingById = async(req, res) => {
+    try {
+        const {userId} = req.auth()
+        const {bookingId} = req.params
+
+        const booking = await Booking.findOne({_id: bookingId, user: userId}).populate({
+            path: 'show',
+            populate: [{path: 'movie'}, {path: 'event'}]
+        })
+        if(!booking){
+            return res.json({success: false, message: "Booking not found"})
+        }
+
+        res.json({success: true, booking})
     } catch (error) {
         console.error(error.message)
         res.json({success: false, message: error.message})
