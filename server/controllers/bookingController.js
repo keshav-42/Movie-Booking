@@ -100,13 +100,20 @@ export const createBooking = async(req, res) => {
 
         await booking.save()
 
-        //Run Inngest scheduler function to check payment status after 10 minutes
-        await inngest.send({
-            name: 'app/checkpayment',
-            data:{
-                bookingId: booking._id.toString()
-            }
-        })
+        //Run Inngest scheduler function to check payment status after 10 minutes.
+        //Best-effort: the booking + Stripe session already exist, so a background
+        //job dispatch failure (e.g. Inngest not configured in local dev) must not
+        //block the checkout redirect.
+        try {
+            await inngest.send({
+                name: 'app/checkpayment',
+                data:{
+                    bookingId: booking._id.toString()
+                }
+            })
+        } catch (error) {
+            console.error('Inngest dispatch failed (checkpayment):', error.message)
+        }
 
         res.json({success: true, url: session.url})
     } catch (error) {

@@ -169,6 +169,7 @@ Point the Stripe and Clerk webhooks at your server (or use the Stripe CLI to for
 | server | `TMDB_API_KEY` | Movie data (v4 read token) |
 | server | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Payments |
 | server | `SMTP_USER` / `SMTP_PASS` / `SENDER_EMAIL` | Transactional email |
+| server | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Background jobs (seat release, emails, reminders) |
 | client | `VITE_BASE_URL` | Backend API base URL |
 | client | `VITE_CLERK_PUBLISHABLE_KEY` | Frontend auth |
 | client | `VITE_TMDB_IMAGE_BASE_URL` | TMDB image CDN base |

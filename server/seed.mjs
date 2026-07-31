@@ -7,19 +7,20 @@ import connectDB from "./configs/db.js";
 import Movie from "./models/Movie.js";
 import Show from "./models/Show.js";
 
-const HOW_MANY_MOVIES = 5;
+const HOW_MANY_MOVIES = 8;
 const PRICE = 12; // in whatever VITE_CURRENCY the client displays
+const DAYS_AHEAD = 14;
 
 const tmdb = (url) =>
   axios.get(url, {
     headers: { Authorization: `Bearer ${process.env.TMDB_API_KEY}` },
   });
 
-// Build a few future dates (today + next 3 days), two showtimes each.
+// Build future dates (today + next DAYS_AHEAD days), three showtimes each.
 const buildShowsInput = () => {
   const input = [];
   const times = ["13:00", "16:30", "20:00"];
-  for (let d = 1; d <= 3; d++) {
+  for (let d = 1; d <= DAYS_AHEAD; d++) {
     const day = new Date();
     day.setDate(day.getDate() + d);
     const date = day.toISOString().split("T")[0]; // YYYY-MM-DD

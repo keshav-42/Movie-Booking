@@ -35,11 +35,15 @@ export const stripeWebHooks = async (request, response) => {
           paymentLink: "",
         })
 
-        //Send Confirmation Email
-        await inngest.send({
-          name: 'app/show.booked',
-          data: {bookingId}
-        })
+        //Send Confirmation Email — best-effort, the payment is already recorded above.
+        try {
+          await inngest.send({
+            name: 'app/show.booked',
+            data: {bookingId}
+          })
+        } catch (error) {
+          console.error('Inngest dispatch failed (show.booked):', error.message)
+        }
 
         break;
       }

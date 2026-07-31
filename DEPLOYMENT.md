@@ -43,6 +43,7 @@ The database is **MongoDB Atlas** (already used in development). Both `client/` 
    | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe (fill the webhook secret in Step 4) |
    | `SMTP_USER` / `SMTP_PASS` / `SENDER_EMAIL` | Brevo SMTP |
    | `CLIENT_URL` | Your frontend URL (fill after Step 2) |
+   | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | From the Inngest app you create in Step 4 — without these, checkout succeeds but background jobs (seat release, confirmation emails, reminders) silently fail |
 
 6. Click **Deploy**. When it finishes, copy the URL, e.g.
    `https://quickshow-server.vercel.app`. Visiting it should show **"Server is Live"**.
@@ -97,8 +98,13 @@ These make payments, auth sync, and emails work end to end.
   `STRIPE_WEBHOOK_SECRET`, then redeploy the backend.
 
 **Inngest** (emails, reminders, seat release)
-- Create an [Inngest](https://www.inngest.com/) app and connect it to the serve
-  endpoint: `https://quickshow-server.vercel.app/api/inngest`.
+- Create an [Inngest](https://www.inngest.com/) app.
+- Copy its **Event Key** and **Signing Key** into the backend's
+  `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY`, then redeploy.
+- In the Inngest dashboard, sync the app against the serve endpoint:
+  `https://quickshow-server.vercel.app/api/inngest` (Vercel is serverless, so
+  Inngest can't auto-discover it — this manual sync step is required, and
+  needed again after any deploy that changes the function list).
 
 ---
 
