@@ -59,6 +59,11 @@ const EventCard = ({ event, onBook }) => {
         <Poster event={event} t={t} />
         {/* faint bottom fade only on hover, so the title area lifts without chrome at rest */}
         <div className='absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition duration-300' />
+        {event.isLocal && (
+          <span className='absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-black/70 text-amber-400 border border-amber-400/30'>
+            Demo
+          </span>
+        )}
       </div>
 
       {/* meta below the poster — two tight lines, no overlay tags */}

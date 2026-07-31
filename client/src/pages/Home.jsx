@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Film, Trophy, Music, Drama, Mic2, Sparkles } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
-import { EVENTS, FALLBACK_MOVIES, normalizeEvent, themeFor } from '../assets/events'
+import { FALLBACK_MOVIES, mergeEvents, normalizeEvent, themeFor } from '../assets/events'
 import EventCard from '../components/EventCard'
 import Rail from '../components/Rail'
 import HeroCarousel from '../components/HeroCarousel'
@@ -32,14 +32,9 @@ const Home = () => {
     return source.map((s) => normalizeEvent(s, imgBase))
   }, [shows, image_base_url])
 
-  // Real events published by the admin come first; bundled demo events fill
-  // the rails so discovery never looks empty. Demo ones are flagged so the
-  // booking flow can tell them apart.
-  const events = useMemo(() => {
-    const backend = liveEvents.map((e) => normalizeEvent(e))
-    const local = EVENTS.map((e) => normalizeEvent({ ...e, isLocal: true }))
-    return [...backend, ...local]
-  }, [liveEvents])
+  // Real events published by the admin come first; bundled demo events only
+  // fill in a category that has no real events yet (see mergeEvents).
+  const events = useMemo(() => mergeEvents(liveEvents), [liveEvents])
   const all = useMemo(() => [...movies, ...events], [movies, events])
 
   const byCategory = (cat) => all.filter((e) => e.category === cat)

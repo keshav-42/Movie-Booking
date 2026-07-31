@@ -227,6 +227,19 @@ export const normalizeEvent = (item, image_base_url = '') => {
 
 export const getEventById = (id) => EVENTS.find((e) => e._id === id) || null
 
+// Real (bookable) events always win; bundled demo events only fill in a
+// category that has zero real events yet, so discovery never looks empty
+// without ever putting a non-bookable card next to a real one of the same
+// title (e.g. a demo "BTS" alongside the real published one).
+export const mergeEvents = (liveEvents = []) => {
+  const backend = liveEvents.map((e) => normalizeEvent(e))
+  const backendCategories = new Set(backend.map((e) => e.category))
+  const local = EVENTS.filter((e) => !backendCategories.has(e.category)).map((e) =>
+    normalizeEvent({ ...e, isLocal: true })
+  )
+  return [...backend, ...local]
+}
+
 export const CURRENCY = import.meta.env.VITE_CURRENCY || '$'
 
 // Per-category visual identity — each category owns a gradient + accent so the

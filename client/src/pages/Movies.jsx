@@ -5,7 +5,7 @@ import BlurCircle from '../components/BlurCircle'
 import EventCard from '../components/EventCard'
 import DateTimeModal from '../components/DateTimeModal'
 import { useAppContext } from '../context/AppContext'
-import { EVENTS, FALLBACK_MOVIES, normalizeEvent } from '../assets/events'
+import { FALLBACK_MOVIES, mergeEvents, normalizeEvent } from '../assets/events'
 
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: Sparkles },
@@ -24,7 +24,7 @@ const SORTS = [
 ]
 
 const Movies = () => {
-  const { shows, image_base_url } = useAppContext()
+  const { shows, liveEvents, image_base_url } = useAppContext()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
 
@@ -56,7 +56,7 @@ const Movies = () => {
     const imgBase = shows.length ? image_base_url : ''
     return source.map((s) => normalizeEvent(s, imgBase))
   }, [shows, image_base_url])
-  const events = useMemo(() => EVENTS.map((e) => normalizeEvent(e)), [])
+  const events = useMemo(() => mergeEvents(liveEvents), [liveEvents])
   const pool = useMemo(() => [...movies, ...events], [movies, events])
 
   const results = useMemo(() => {
