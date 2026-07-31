@@ -74,10 +74,10 @@ const run = async () => {
   for (const m of picks) {
     const movie = await upsertMovieFromTMDB(m.id);
 
-    const showsToCreate = [];
+    const candidates = [];
     showsInput.forEach((s) => {
       s.time.forEach((t) => {
-        showsToCreate.push({
+        candidates.push({
           movie: String(m.id),
           showDateTime: new Date(`${s.date}T${t}`),
           showPrice: PRICE,
@@ -86,11 +86,20 @@ const run = async () => {
       });
     });
 
+    // Skip datetimes that already have a show for this movie, so reruns
+    // (e.g. topping up inventory) don't create duplicate showtimes.
+    const existing = await Show.find(
+      { movie: String(m.id), showDateTime: { $in: candidates.map((c) => c.showDateTime) } },
+      { showDateTime: 1 }
+    );
+    const existingTimes = new Set(existing.map((s) => s.showDateTime.getTime()));
+    const showsToCreate = candidates.filter((c) => !existingTimes.has(c.showDateTime.getTime()));
+
     if (showsToCreate.length > 0) {
       await Show.insertMany(showsToCreate);
       totalShows += showsToCreate.length;
     }
-    console.log(`  + ${movie.title} (${showsToCreate.length} shows)`);
+    console.log(`  + ${movie.title} (${showsToCreate.length} new, ${candidates.length - showsToCreate.length} already existed)`);
   }
 
   console.log(`\nDone. Seeded ${picks.length} movies, ${totalShows} shows.`);
