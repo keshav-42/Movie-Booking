@@ -32,3 +32,7 @@ client/.env
 
 # Claude Code local config
 .claude/
+
+server.7z
+server/server.7z
+impeccable/
