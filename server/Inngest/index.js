@@ -67,15 +67,18 @@ const releaseSeatsAndDeleteBooking = inngest.createFunction(
       const bookingId = event.data.bookingId;
       const booking = await Booking.findById(bookingId);
 
-      //If payment is not made, release seats and delete booking
+      //If payment is not made, release seats and delete booking.
+      //Unset only this booking's own seats instead of rewriting the whole
+      //occupiedSeats object: a full-document save would write back a copy read
+      //before this point, silently clobbering any seat another user reserved
+      //in the meantime.
       if (!booking.isPaid) {
-        const show = await Show.findById(booking.show);
-        booking.bookedSeats.forEach((seats) => {
-          delete show.occupiedSeats[seats];
+        const release = {};
+        booking.bookedSeats.forEach((seat) => {
+          release[`occupiedSeats.${seat}`] = "";
         });
 
-        show.markModified("occupiedSeats");
-        await show.save();
+        await Show.updateOne({ _id: booking.show }, { $unset: release });
         await Booking.findByIdAndDelete(bookingId);
       }
     });
