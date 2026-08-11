@@ -107,6 +107,7 @@ export const createBooking = async(req, res) => {
             })
 
             booking.paymentLink = session.url
+            booking.stripeSessionId = session.id
 
             await booking.save()
 

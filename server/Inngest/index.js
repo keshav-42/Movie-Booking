@@ -1,4 +1,5 @@
 import { Inngest } from "inngest";
+import stripe from "stripe";
 import User from "../models/User.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
@@ -67,20 +68,59 @@ const releaseSeatsAndDeleteBooking = inngest.createFunction(
       const bookingId = event.data.bookingId;
       const booking = await Booking.findById(bookingId);
 
-      //If payment is not made, release seats and delete booking.
+      //Already gone (or already paid) — nothing to reclaim.
+      if (!booking || booking.isPaid) return;
+
+      //Kill the Checkout Session BEFORE touching seats. Stripe's minimum
+      //session lifetime is 30 minutes but the hold is only 10, so leaving the
+      //session alive would let this user pay for seats we just handed to
+      //someone else.
+      if (booking.stripeSessionId) {
+        const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+
+        try {
+          await stripeInstance.checkout.sessions.expire(booking.stripeSessionId);
+        } catch (error) {
+          //Expiring only fails for a session that is no longer open — i.e. the
+          //payment landed just before us. Leave the booking and its seats
+          //alone and let the webhook mark it paid.
+          console.error(
+            `Not releasing ${bookingId}: session no longer expirable —`,
+            error.message
+          );
+          return;
+        }
+
+        //The session is dead to new payments now, but one could have been in
+        //flight while we expired it. Re-check before giving the seats away.
+        const session = await stripeInstance.checkout.sessions.retrieve(
+          booking.stripeSessionId
+        );
+        if (session.payment_status === "paid") {
+          console.error(`Not releasing ${bookingId}: payment landed during expiry`);
+          return;
+        }
+      }
+
+      //Delete conditionally on still-unpaid, so a payment confirmed between
+      //the read above and here can't have its booking deleted out from under
+      //it. No document back means the webhook won — leave the seats held.
+      const cancelled = await Booking.findOneAndDelete({
+        _id: bookingId,
+        isPaid: false,
+      });
+      if (!cancelled) return;
+
       //Unset only this booking's own seats instead of rewriting the whole
       //occupiedSeats object: a full-document save would write back a copy read
       //before this point, silently clobbering any seat another user reserved
       //in the meantime.
-      if (!booking.isPaid) {
-        const release = {};
-        booking.bookedSeats.forEach((seat) => {
-          release[`occupiedSeats.${seat}`] = "";
-        });
+      const release = {};
+      cancelled.bookedSeats.forEach((seat) => {
+        release[`occupiedSeats.${seat}`] = "";
+      });
 
-        await Show.updateOne({ _id: booking.show }, { $unset: release });
-        await Booking.findByIdAndDelete(bookingId);
-      }
+      await Show.updateOne({ _id: cancelled.show }, { $unset: release });
     });
   }
 );
