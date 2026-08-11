@@ -95,7 +95,9 @@ These make payments, auth sync, and emails work end to end.
 **Stripe** (payment confirmation)
 - Stripe Dashboard → **Developers → Webhooks** → add endpoint:
   `https://quickshow-server.vercel.app/api/stripe`
-- Subscribe to `checkout.session.completed`.
+- Subscribe to `payment_intent.succeeded` — this is the event the handler in
+  `controllers/stripeWebHooks.js` actually switches on. Subscribing only to
+  `checkout.session.completed` means no booking is ever marked paid.
 - Copy the **Signing secret** (`whsec_...`) into the backend's
   `STRIPE_WEBHOOK_SECRET`, then redeploy the backend.
 
