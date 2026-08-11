@@ -29,3 +29,6 @@ dist-ssr/
 *.sw?
 server/.env
 client/.env
+
+# Claude Code local config
+.claude/

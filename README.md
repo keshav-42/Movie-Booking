@@ -12,6 +12,7 @@ Browse what's on, choose your seats on a real venue map, pay securely, and get y
 [![Stripe](https://img.shields.io/badge/Payments-Stripe-635BFF?logo=stripe&logoColor=white)](https://stripe.com/)
 [![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?logo=clerk&logoColor=white)](https://clerk.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Ticketmaster](https://img.shields.io/badge/Live_Events-Ticketmaster-0067B8?logo=ticketmaster&logoColor=white)](https://developer.ticketmaster.com/)
 
 </div>
 
@@ -28,16 +29,21 @@ Booking a ticket online is rarely one smooth experience. Discovery lives on one 
 ## Features
 
 ### For attendees
-- **Interactive venue seat maps** — pick exact seats on a real venue layout (cinema, theater, arena, or stadium). Every section shows its price and how many seats remain; selected and taken seats update live.
-- **Unified discovery** — a single category, city, and search bar to browse movies *and* live events (sports, concerts, theater, comedy).
+- **Interactive venue seat maps** — pick exact seats on a real venue layout (cinema, theater, arena, or stadium), with a 3D seat preview. Every section shows its price and how many seats remain; selected and taken seats update live.
+- **Unified discovery** — a single category, city, and search bar to browse movies *and* live events (sports, concerts, theater, comedy), with a rotating hero carousel and themed rails per category.
 - **Live movie catalog** — now-playing titles, posters, cast, ratings, trailers, and runtime sourced from the TMDB API.
+- **Live event catalog** — real events pulled from the Ticketmaster Discovery API when published by an operator; a bundled sample catalog fills in only for categories with no live events yet, so discovery never looks empty.
+- **One-click demo login** — a "Try Demo" button signs a reviewer into a shared demo account via a Clerk sign-in token, no signup required.
 - **Secure checkout** — Stripe Checkout with a 30-minute session window; held seats are automatically released if payment is not completed within 10 minutes.
-- **Favourites and booking history** — save titles you like and review your bookings and payment status any time.
+- **Booking confirmation screen** — after checkout, a dedicated success page polls for payment confirmation and shows a ticket-stub summary before handing off to My Bookings.
+- **My Bookings, grouped** — bookings are sorted into Upcoming, Pending payment (with a one-click resume-checkout link), and Past, so the state of every booking is obvious at a glance.
+- **Favourites** — save titles you like and revisit them any time.
 - **Transactional email** — booking confirmations, new-show announcements, and showtime reminders delivered automatically.
 
 ### For operators
 - **Dashboard** — at-a-glance totals for bookings, revenue, active shows, and users.
 - **Add shows** — search TMDB, choose dates and times, set a price, and publish in a few clicks.
+- **Add events** — browse live Ticketmaster events by category/city and publish them with per-section venue pricing.
 - **Manage** — review every scheduled show and every booking across the platform.
 - **Protected routes** — admin APIs and pages are guarded by Clerk-backed middleware.
 
@@ -51,32 +57,29 @@ Booking a ticket online is rarely one smooth experience. Discovery lives on one 
 | Payments | Stripe Checkout and webhooks |
 | Background jobs | Inngest (scheduled and event-driven functions) |
 | Email | Nodemailer over Brevo SMTP |
-| External data | TMDB API (movies, cast, images) |
+| External data | TMDB API (movies, cast, images), Ticketmaster Discovery API (live events) |
 
 ## Architecture
 
 ```
-                    +-----------------------------+
-                    |   React client (Vite)       |
-                    |   discovery - seat map -    |
-                    |   checkout - admin panel    |
-                    +--------------+--------------+
-                                   |  REST (axios)
-                                   v
-        +-----------------------------------------------+
-        |            Express API server                 |
-        | /api/show  /api/booking  /api/admin  /api/user |
-        |          Clerk middleware - CORS              |
-        +---+---------------+--------------+------------+
-            |               |              |
-       +----v----+    +-----v-----+   +----v------+
-       | MongoDB |    |  Stripe   |   |  Inngest  |
-       |(Mongoose)|   | Checkout  |   |  jobs     |
-       +---------+    | + webhooks|   | email -   |
-                      +-----------+   | reminders-|
-       +---------+                    | seat      |
-       |  TMDB   |<--- movie data     | release   |
-       +---------+                    +-----------+
+                          +-----------------------------+
+                          |     React client (Vite)     |
+                          |   discovery - seat map -    |
+                          |   checkout - admin panel    |
+                          +-----------------------------+
+                                         |  REST (axios)
+                                         v
++---------------------------------------------------------------------------------+
+|                               Express API server                                |
+|           /api/show  /api/event  /api/booking  /api/admin  /api/user            |
+|                             Clerk middleware - CORS                             |
++---------------------------------------------------------------------------------+
+       |                |                |                |                |
++-------------+  +-------------+  +-------------+  +-------------+  +-------------+
+|   MongoDB   |  |   Stripe    |  |   Inngest   |  |    TMDB     |  |Ticketmaster |
+| (Mongoose)  |  | Checkout +  |  |    jobs     |  |  (movies)   |  |  (events)   |
+|             |  |  webhooks   |  |             |  |             |  |             |
++-------------+  +-------------+  +-------------+  +-------------+  +-------------+
 ```
 
 Background jobs (Inngest) keep the system consistent and users informed:
@@ -91,18 +94,22 @@ Background jobs (Inngest) keep the system consistent and users informed:
 Movie-Booking/
 ├── client/                 # React + Vite frontend
 │   └── src/
-│       ├── components/     # Navbar, seat maps, venue map, discovery bar, cards
-│       ├── pages/          # Home, Movies, MovieDetails, SeatLayout, MyBookings
-│       │   └── admin/      # Dashboard, AddShows, ListShows, ListBookings
+│       ├── components/     # Navbar, VenueMap/VenueSeatMap, SeatView3D, HeroCarousel,
+│       │                   # DiscoveryBar, Rail, EventCard, MovieCard, admin/*
+│       ├── pages/          # Home, Movies, MovieDetails, SeatLayout, BookingSuccess,
+│       │                   # MyBookings, Favourite
+│       │   └── admin/      # Dashboard, AddShows, AddEvents, ListShows, ListBookings
 │       ├── context/        # AppContext (global state, API calls, auth)
+│       ├── assets/         # events.js (fallback movies + demo event catalog)
 │       └── lib/            # venue model, date/time formatters
 └── server/                 # Express + MongoDB backend
-    ├── controllers/        # show, booking, user, admin, stripe webhooks
-    ├── models/             # Movie, Show, Booking, User (Mongoose schemas)
-    ├── routes/             # /show, /booking, /admin, /user
+    ├── controllers/        # show, event (Ticketmaster), booking, user, admin, stripe webhooks
+    ├── models/             # Movie, Show, Event, Booking, User (Mongoose schemas)
+    ├── routes/             # /show, /event, /booking, /admin, /user
     ├── middleware/         # admin auth guard
     ├── Inngest/            # background job definitions
     ├── configs/            # db + nodemailer setup
+    ├── utils/              # venue pricing helpers
     └── seed.mjs            # one-off script to seed movies and shows
 ```
 
@@ -112,6 +119,7 @@ Movie-Booking/
 - Node.js 18+ and npm
 - A MongoDB database (local or Atlas)
 - Accounts and keys for Clerk, Stripe, TMDB, and an SMTP provider (e.g. Brevo)
+- Optional: a Ticketmaster Discovery API key, for live events in the admin "Add Events" browser (a small sample feed is used if omitted)
 
 ### 1. Clone
 
@@ -167,9 +175,12 @@ Point the Stripe and Clerk webhooks at your server (or use the Stripe CLI to for
 | server | `MONGODB_URI` | MongoDB connection string |
 | server | `CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` | Authentication |
 | server | `TMDB_API_KEY` | Movie data (v4 read token) |
+| server | `TICKETMASTER_API_KEY` | Live event data for the admin "Add Events" browser (falls back to a small sample feed if unset) |
 | server | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Payments |
 | server | `SMTP_USER` / `SMTP_PASS` / `SENDER_EMAIL` | Transactional email |
 | server | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Background jobs (seat release, emails, reminders) |
+| server | `CLIENT_URL` | Frontend URL used to build links in outgoing emails |
+| server | `DEMO_USER_ID` | Clerk user ID signed into by the "Try Demo" one-click login |
 | client | `VITE_BASE_URL` | Backend API base URL |
 | client | `VITE_CLERK_PUBLISHABLE_KEY` | Frontend auth |
 | client | `VITE_TMDB_IMAGE_BASE_URL` | TMDB image CDN base |
@@ -189,6 +200,6 @@ Released under the ISC License. Feel free to fork, learn from, and build on it.
 
 <div align="center">
 
-Built with the MERN stack. Movies powered by <a href="https://www.themoviedb.org/">TMDB</a>.
+Built with the MERN stack. Movies powered by <a href="https://www.themoviedb.org/">TMDB</a>, live events powered by <a href="https://developer.ticketmaster.com/">Ticketmaster</a>.
 
 </div>

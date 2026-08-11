@@ -40,10 +40,12 @@ The database is **MongoDB Atlas** (already used in development). Both `client/` 
    | `MONGODB_URI` | Atlas connection string (no trailing db name) |
    | `CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` | From the Clerk dashboard |
    | `TMDB_API_KEY` | TMDB v4 read token |
+   | `TICKETMASTER_API_KEY` | Ticketmaster Discovery API key, for live events in the admin "Add Events" browser (optional — falls back to a small sample feed if unset) |
    | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe (fill the webhook secret in Step 4) |
    | `SMTP_USER` / `SMTP_PASS` / `SENDER_EMAIL` | Brevo SMTP |
    | `CLIENT_URL` | Your frontend URL (fill after Step 2) |
-   | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | From the Inngest app you create in Step 4 — without these, checkout succeeds but background jobs (seat release, confirmation emails, reminders) silently fail |
+   | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | From the Inngest app you create in Step 4 — required for background jobs (seat release, confirmation emails, reminders) to run |
+   | `DEMO_USER_ID` | Clerk user ID used by the "Try Demo" one-click login button |
 
 6. Click **Deploy**. When it finishes, copy the URL, e.g.
    `https://quickshow-server.vercel.app`. Visiting it should show **"Server is Live"**.
